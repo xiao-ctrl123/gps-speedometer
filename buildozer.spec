@@ -25,9 +25,12 @@ android.permissions = ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION,INTERNET,ACCES
 android.api = 34
 android.minapi = 24
 android.ndk_api = 24
+# p4a 必须固定：master / v2026.x 已升级到 Python 3.14，Kivy 2.3.1 无对应预编译包。
+# v2024.01.21 使用 Python 3.11.5，kivy / pyjnius 从源码编译，最稳定。
+p4a.branch = v2024.01.21
+android.ndk = 25b
 android.archs = arm64-v8a
 android.allow_backup = True
-# CI 上自动接受 SDK 许可协议
 android.accept_sdk_license = True
 
 # 使用的引导程序（Kivy + SDL2）
