@@ -1,0 +1,5 @@
+# 运行本项目所需的 Python 依赖。
+# 注意：Kivy 目前没有 Python 3.14 的预编译包，请使用 Python 3.12 / 3.13。
+kivy==2.3.1
+plyer==2.1.0
+mutagen==1.48.1

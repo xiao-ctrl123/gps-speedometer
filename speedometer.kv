@@ -1,0 +1,334 @@
+#:import dp kivy.metrics.dp
+#:import sp kivy.metrics.sp
+
+
+# ============================================================
+# 可复用小组件
+# ============================================================
+
+<StatChip@BoxLayout>:
+    orientation: 'horizontal'
+    spacing: dp(6)
+    size_hint_x: 1
+    icon: 'timer'
+    value: '0'
+    Icon:
+        icon: root.icon
+        color: app.c_icon
+        size_hint: None, None
+        size: dp(20), dp(20)
+        pos_hint: {'center_y': 0.5}
+    Label:
+        text: root.value
+        color: app.c_fg
+        font_size: sp(15)
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        size_hint_x: 1
+
+
+<IconButton@Button>:
+    icon: 'gear'
+    size_hint: None, None
+    size: dp(40), dp(40)
+    background_normal: ''
+    background_color: 0, 0, 0, 0
+    canvas.before:
+        Color:
+            rgba: app.c_panel
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(20)]
+    Icon:
+        icon: root.icon
+        color: app.c_icon
+        size_hint: None, None
+        size: min(root.width, root.height) * 0.5, min(root.width, root.height) * 0.5
+        center: root.center
+
+
+# ============================================================
+# 根布局：全屏地图 + 浮层控件
+# ============================================================
+
+<SpeedometerScreen>:
+    canvas.before:
+        Color:
+            rgba: app.c_bg
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    MapView:
+        id: mapview
+        size_hint: 1, 1
+        bg_color: app.c_bg
+        route_color: app.c_route
+        accent: app.c_accent
+        overlay_color: app.c_overlay
+
+    # ---------------- 顶部时间 + 统计 ----------------
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: None, None
+        width: min(root.width * 0.56, dp(760))
+        height: dp(96)
+        pos_hint: {'center_x': 0.5, 'top': 0.99}
+        padding: dp(18), dp(8)
+        spacing: dp(2)
+        canvas.before:
+            Color:
+                rgba: app.c_panel
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(18)]
+
+        Label:
+            text: app.clock_text
+            font_size: sp(23)
+            bold: True
+            color: app.c_fg
+            size_hint_y: None
+            height: dp(38)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(36)
+            StatChip:
+                icon: 'timer'
+                value: app.duration_text
+            StatChip:
+                icon: 'bars'
+                value: app.distance_text
+            StatChip:
+                icon: 'speed'
+                value: app.avg_speed_text
+            StatChip:
+                icon: 'speed'
+                value: app.max_speed_text
+
+    # ---------------- 海拔 ----------------
+    BoxLayout:
+        size_hint: None, None
+        width: dp(150)
+        height: dp(40)
+        pos_hint: {'right': 0.99, 'top': 0.99}
+        padding: dp(12), dp(6)
+        spacing: dp(8)
+        canvas.before:
+            Color:
+                rgba: app.c_panel
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(14)]
+        Icon:
+            icon: 'mountain'
+            color: app.c_icon
+            size_hint: None, None
+            size: dp(22), dp(22)
+            pos_hint: {'center_y': 0.5}
+        Label:
+            text: app.altitude_text
+            color: app.c_fg
+            font_size: sp(14)
+            halign: 'left'
+            valign: 'middle'
+            text_size: self.size
+            size_hint_x: 1
+
+    # ---------------- 地图控制（左上） ----------------
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: None, None
+        width: dp(44)
+        height: dp(44) * 4 + dp(24)
+        pos_hint: {'x': 0.012, 'top': 0.99}
+        spacing: dp(8)
+        IconButton:
+            icon: 'recenter'
+            on_release: app.recenter_map()
+        IconButton:
+            icon: 'plus'
+            on_release: app.map_zoom_in()
+        IconButton:
+            icon: 'minus'
+            on_release: app.map_zoom_out()
+        IconButton:
+            icon: 'gear'
+            on_release: app.toggle_theme()
+
+    # ---------------- 半圆车速表（左下） ----------------
+    SpeedArc:
+        id: arc
+        value: app.speed_display
+        max_value: app.arc_max
+        unit: app.unit
+        panel_color: app.c_panel
+        border_color: app.c_panel_border
+        track_color: app.c_track
+        progress_color: app.c_route
+        needle_color: app.c_needle
+        value_color: app.c_fg
+        unit_color: app.c_fg_dim
+        label_color: app.c_fg_dim
+        tick_color: app.c_fg_faint
+        size_hint: None, None
+        size: min(root.width * 0.30, root.height * 0.46), min(root.width * 0.30, root.height * 0.46)
+        pos: root.x + dp(12), root.y + dp(14)
+
+    # ---------------- 罗盘（底部中间） ----------------
+    CompassStrip:
+        id: compass
+        heading: app.heading
+        line_color: app.c_panel_border
+        tick_color: app.c_fg_dim
+        label_color: app.c_fg_dim
+        marker_color: app.c_needle
+        heading_color: app.c_fg
+        size_hint: None, None
+        size: min(root.width * 0.30, dp(600)), dp(96)
+        pos_hint: {'center_x': 0.45}
+        y: root.y + dp(14)
+
+    # ---------------- 音乐播放器（右下） ----------------
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint: None, None
+        size: min(root.height * 0.34, root.width * 0.24) + min(dp(170), root.width * 0.15), min(root.height * 0.34, root.width * 0.24)
+        pos: root.right - (min(root.height * 0.34, root.width * 0.24) + min(dp(170), root.width * 0.15)) - dp(14), root.y + dp(14)
+        spacing: dp(12)
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: None
+            width: min(dp(170), root.width * 0.15)
+            size_hint_y: 1
+            spacing: dp(2)
+
+            Label:
+                text: app.music.title
+                color: app.c_fg
+                font_size: sp(16)
+                bold: True
+                halign: 'right'
+                valign: 'bottom'
+                text_size: self.size
+                size_hint_y: None
+                height: dp(24)
+            Label:
+                text: app.music.artist
+                color: app.c_fg_dim
+                font_size: sp(12)
+                halign: 'right'
+                valign: 'top'
+                text_size: self.size
+                size_hint_y: None
+                height: dp(18)
+
+            Widget:
+                size_hint_y: 1
+
+            BoxLayout:
+                size_hint_y: None
+                height: dp(40)
+                spacing: dp(2)
+                Widget:
+                    size_hint_x: 1
+                IconButton:
+                    icon: 'prev'
+                    size: dp(34), dp(34)
+                    on_release: app.music.prev()
+                IconButton:
+                    icon: app.music.play_icon
+                    size: dp(40), dp(40)
+                    on_release: app.music.toggle()
+                IconButton:
+                    icon: 'next'
+                    size: dp(34), dp(34)
+                    on_release: app.music.next()
+                Widget:
+                    size_hint_x: 1
+
+            BoxLayout:
+                size_hint_y: None
+                height: dp(26)
+                spacing: dp(8)
+                Label:
+                    text: app.music.position_text
+                    color: app.c_fg_dim
+                    font_size: sp(11)
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.size
+                    size_hint_x: None
+                    width: dp(38)
+                ProgressLine:
+                    fraction: app.music.progress
+                    track_color: app.c_track
+                    fill_color: app.c_accent
+                    size_hint_x: 1
+                    size_hint_y: None
+                    height: dp(4)
+                    pos_hint: {'center_y': 0.5}
+                Label:
+                    text: app.music.duration_text
+                    color: app.c_fg_dim
+                    font_size: sp(11)
+                    halign: 'right'
+                    valign: 'middle'
+                    text_size: self.size
+                    size_hint_x: None
+                    width: dp(38)
+
+        # 彩色渐变环 + 专辑封面
+        FloatLayout:
+            size_hint: None, 1
+            width: self.height
+
+            GradientRing:
+                size_hint: 1, 1
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                fraction: app.music.progress
+                off_color: app.c_ring_off
+
+            Widget:
+                size_hint: None, None
+                size: self.parent.width * 0.58, self.parent.height * 0.58
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 0.06
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [dp(16)]
+
+            Image:
+                texture: app.music.art_texture
+                opacity: 1 if app.music.art_texture else 0
+                size_hint: None, None
+                size: self.parent.width * 0.58, self.parent.height * 0.58
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+                allow_stretch: True
+                keep_ratio: True
+
+            Icon:
+                icon: 'music'
+                color: app.c_fg_faint
+                opacity: 0 if app.music.art_texture else 1
+                size_hint: None, None
+                size: self.parent.width * 0.22, self.parent.height * 0.22
+                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+    # ---------------- 地图版权 ----------------
+    Label:
+        text: '地图 © 高德地图'
+        color: app.c_fg_faint
+        font_size: sp(10)
+        size_hint: None, None
+        size: dp(120), dp(14)
+        pos: root.center_x - dp(60), root.y + dp(1)

@@ -1,0 +1,8 @@
+# 统一使用 LF，避免在 Windows 提交、Linux 构建时出现换行差异
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.otf binary
