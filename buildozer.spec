@@ -25,7 +25,7 @@ android.permissions = ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION,INTERNET,ACCES
 android.api = 34
 android.minapi = 24
 android.ndk_api = 24
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 android.allow_backup = True
 # CI 上自动接受 SDK 许可协议
 android.accept_sdk_license = True
